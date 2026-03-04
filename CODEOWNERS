@@ -1,0 +1,33 @@
+# ====================================================================
+# Omni-FI Core - CODEOWNERS
+# ====================================================================
+
+# 1. Global Default (Fallback)
+# Either Garrick (Lead) or Vlad (Fullstack) must review everything by default
+* @GarrickBrown @vladyslav-nechyporuk
+
+# 2. Scraping & AI (Veronika's Domain)
+# Veronika must approve changes to the Playwright engines and extraction logic
+/apps/scraping/ @vapasichnyk
+/apps/categorization/ @vapasichnyk @vladyslav-nechyporuk
+
+# 3. Core API, Infrastructure & Security (Vlad's Domain)
+# Vlad owns the high-risk security and infrastructure logic
+/apps/credential_vault/ @vladyslav-nechyporuk
+/apps/authentication/ @vladyslav-nechyporuk
+/apps/security/ @vladyslav-nechyporuk
+/apps/sync_engine/ @vladyslav-nechyporuk
+/omni_fi_backend/ @vladyslav-nechyporuk
+Dockerfile @vladyslav-nechyporuk
+docker-compose*.yml @vladyslav-nechyporuk
+Caddyfile* @vladyslav-nechyporuk
+
+# 4. Frontend Application
+# Co-owned by Garrick and Vlad
+/omni_fi_demo_front/ @GarrickBrown @vladyslav-nechyporuk
+
+# 5. Documentation & Governance
+# Only Garrick (Project Manager) can approve changes to CI/CD workflows and Docs
+/.github/ @GarrickBrown
+/docs/ @GarrickBrown
+CLAUDE.md @GarrickBrown
