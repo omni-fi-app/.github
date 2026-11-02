@@ -8,11 +8,11 @@ Canonical house style for GitHub Actions across all `omni-fi-app` repositories. 
 
 | Repo | Stack | Package manager | CI runtime |
 |---|---|---|---|
-| `omni-fi-core` | Python / Django | `pip` (`requirements.txt`) | Python |
-| `omni-fi-web` | Next.js portal (Bun) | `bun` | Bun + Node |
-| `omni-fi-link` | Link Widget (Bun) | `bun` | Bun + Node |
+| `omni-fi-core` | The application monorepo: `core/` Python / Django; `web/` Next.js portal, `link/` Link Widget and `internal/` internal admin, all Bun | `uv` for `core/`; `bun` for the rest | Python; Bun + Node |
 | `omni-fi-react-link` | React SDK (Bun) | `bun` | Bun + Node |
-| `omni-fi-internal` | Internal admin (Bun) | `bun` | Bun + Node |
+| `omni-fi-vault` | The Brain's Obsidian vault (Markdown) | none | none |
+
+`omni-fi-web`, `omni-fi-link` and `omni-fi-internal` were imported into the monorepo with their history on 2026-10-29 and 2026-10-30 and are archived; each carries a README pointing at its new home. The monorepo runs one path-classified CI per surface (`CI`, `Web CI`, `Link CI`, `Internal CI`) from its own `.github/workflows/`.
 
 What must be **uniform** is the *structure* (job name, permissions, concurrency, SHA-pinning, Dependabot, CodeQL strategy). The *phases* differ by stack (Python lint/type/test vs Bun lint/build/test).
 
@@ -87,36 +87,34 @@ Work flows **feature → `staging` → `main`**. `main` is the (eventual) produc
 Practical consequences:
 
 - **CI + CodeQL trigger on BOTH** branches: `on: push` / `pull_request` with `branches: [main, staging]`.
-- **Dependabot targets `staging`** (`target-branch: staging`) so dependency updates land on staging, pass CI there, and promote to main — never landing on main unvalidated. For monorepo/placeholder repos where the real manifests live on `staging` (e.g. `omni-fi-link`), Dependabot also *reads* manifests from staging.
+- **Dependabot targets `staging`** (`target-branch: staging`) so dependency updates land on staging, pass CI there, and promote to main — never landing on main unvalidated. The monorepo keeps its manifests on `staging`, so Dependabot also *reads* them from staging.
 
 **Exception — public SDK repos use `main` + PR branches only (no `staging`).** This is the industry standard for published SDKs (e.g. `omni-fi-react-link`): contributions land via PR straight to `main`. There, CI triggers on `main` only and Dependabot targets `main`.
 
 ## Branch rulesets
 
-This section describes what is **actually configured**, verified against the API on 2026-08-21. It previously described a target state, which is why it is now explicit about the gap.
+This section describes what is **actually configured**, verified against the API on 2026-11-02. It previously described a target state, which is why it is now explicit about the gap.
 
-**Every** branch ruleset carries: required PR review (+ code-owner), **Copilot code review**, no-force-push (`non_fast_forward`), and no-deletion.
+**Every** branch ruleset carries required PR review, no-force-push (`non_fast_forward`) and no-deletion.
 
-**Only the three `Protect Staging` rulesets additionally require a passing `CI` check and `required_linear_history`** — added 2026-08-18.
-
-| Repo | Ruleset | `CI` required | `required_linear_history` |
+| Repo | Ruleset | Required checks | `required_linear_history` |
 | --- | --- | --- | --- |
-| `omni-fi-core` | Protect Staging | ✅ | ✅ |
-| `omni-fi-web` | Protect Staging | ✅ | ✅ |
-| `omni-fi-link` | Protect Staging | ✅ | ✅ |
-| `omni-fi-core` | Protect Main | ❌ | ❌ |
-| `omni-fi-web` | Protect Main | ❌ | ❌ |
-| `omni-fi-link` | Protect Main | ❌ | ❌ |
-| `omni-fi-react-link` | Protect Main | ❌ | ❌ |
-| `omni-fi-internal` | Protect Main | ❌ | ❌ |
-| `omni-fi-internal` | Protect Staging | ❌ | ❌ |
+| `omni-fi-core` | Protect Staging | `CI`, `Internal CI`, `Link CI` | ✅ |
+| `omni-fi-core` | Protect Prelaunch | none | ✅ |
+| `omni-fi-core` | Protect Main | none | ❌ |
+| `omni-fi-react-link` | Protect Main | `CI` | ✅ |
+| `omni-fi-vault` | Protect Main | `CI` | ✅ |
+| `omni-fi-vault` | Protect Staging | `CI` | ✅ |
+| `omni-fi-infra` | Protect Staging | none | ✅ |
+| `omni-fi-infra` | Protect Main | none | ❌ |
+| `.github` | Protect Main | none | ❌ |
 
 Two cases deserve attention rather than being read as oversights to copy:
 
-- **`omni-fi-react-link`** has no `staging`, so `main` **is** its production branch — and it is the one production branch with no required status check.
-- **`omni-fi-internal`** has both rulesets and neither carries the rules.
+- **`omni-fi-react-link`** has no `staging`, so `main` **is** its production branch; it requires `CI` there.
+- **`omni-fi-core`'s `Protect Main`** has no required check because `main` is still the placeholder; the monorepo migration moves the default branch and the checks to `main`.
 
-Four repos also have a `Protect Releases` **tag** ruleset (`omni-fi-core`, `omni-fi-web`, `omni-fi-link`, `omni-fi-react-link`, `omni-fi-internal`), which this document does not otherwise cover.
+`omni-fi-core` and `omni-fi-react-link` also have a `Protect Releases` **tag** ruleset (`v*`, and on the monorepo `link-v*` and `obsidian-plugin-v*` as well), which this document does not otherwise cover.
 
 ### The `CI` name, and why only one check is required
 
